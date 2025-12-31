@@ -19,7 +19,10 @@ app.get("/health", (req, res) => {
 
 // ===================== ROUTES =====================
 const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/user"); // ✅ NEW
+
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes); // ✅ NEW
 
 // ===================== TEST ROUTE =====================
 app.get("/", (req, res) => {

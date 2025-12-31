@@ -19,7 +19,13 @@ const UserSchema = new mongoose.Schema({
         enum: ['student', 'admin'],
         default: 'student'
     },
+
+    // 🔥 Progress fields
     xp: {
+        type: Number,
+        default: 0
+    },
+    streak: {
         type: Number,
         default: 0
     },
@@ -27,6 +33,7 @@ const UserSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+
     createdAt: {
         type: Date,
         default: Date.now
