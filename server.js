@@ -8,34 +8,49 @@ dotenv.config();
 
 const app = express();
 
+// ===================== ROUTES REQUIRE (IMPORTANT ORDER) =====================
+const theoryRoutes = require("./routes/theoryRoutes");
+const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/user");
+const aiRoutes = require("./routes/aiRoutes");
+const pathRoutes = require("./routes/pathRoutes");
+const subTopicRoutes = require("./routes/subTopicRoutes");
+
+// ===================== SEED IMPORT =====================
+const seedDatabase = require("./seedData");
+
 // ===================== MIDDLEWARES =====================
 app.use(cors());
 app.use(express.json());
 
+// ===================== ROUTE MOUNT =====================
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/paths", pathRoutes);
+app.use("/api/subtopics", subTopicRoutes);
+app.use("/api/theory", theoryRoutes);   // ✅ Correct Position
+
 // ===================== HEALTH CHECK =====================
 app.get("/health", (req, res) => {
-    res.json({ status: "ok" });
+  res.json({ status: "ok" });
 });
-
-// ===================== ROUTES =====================
-const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/user"); // ✅ NEW
-
-app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes); // ✅ NEW
 
 // ===================== TEST ROUTE =====================
 app.get("/", (req, res) => {
-    res.send("🚀 HackBox API is running!");
+  res.send("🚀 HackBox API is running!");
 });
 
-// ===================== DATABASE =====================
+// ===================== DATABASE + SERVER START =====================
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("✅ MongoDB Connected"))
-    .catch((err) => console.error("❌ MongoDB Error:", err));
+  .then(async () => {
+    console.log("✅ MongoDB Connected");
 
-// ===================== SERVER =====================
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+    await seedDatabase();
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => console.error("❌ MongoDB Error:", err));
