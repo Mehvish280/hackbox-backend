@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -15,10 +16,13 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // 🔥 HASH PASSWORD BEFORE SAVING
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     user = new User({
       name,
       email,
-      password,
+      passwordHash: hashedPassword, // ✅ store hashed password
       xp: 0,
       streak: 0,
       badges: [],
@@ -27,7 +31,7 @@ router.post("/register", async (req, res) => {
     await user.save();
 
     const token = jwt.sign(
-      { id: user._id }, // 🔥 ONLY ID
+      { id: user._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -42,11 +46,13 @@ router.post("/register", async (req, res) => {
         badges: user.badges,
       },
     });
+
   } catch (err) {
     console.error("Register error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 // ===================== LOGIN =====================
 router.post("/login", async (req, res) => {
@@ -54,12 +60,19 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user || user.password !== password) {
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // 🔥 COMPARE HASHED PASSWORD
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     const token = jwt.sign(
-      { id: user._id }, // 🔥 ONLY ID
+      { id: user._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -74,16 +87,17 @@ router.post("/login", async (req, res) => {
         badges: user.badges,
       },
     });
+
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
+
 // ===================== PROFILE =====================
 router.get("/profile", authMiddleware, async (req, res) => {
   try {
-    // 🔥 ALWAYS FETCH FROM DATABASE
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -97,6 +111,7 @@ router.get("/profile", authMiddleware, async (req, res) => {
       streak: user.streak,
       badges: user.badges,
     });
+
   } catch (err) {
     console.error("Profile error:", err);
     res.status(500).json({ message: "Server error" });
