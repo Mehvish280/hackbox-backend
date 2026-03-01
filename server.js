@@ -8,13 +8,14 @@ dotenv.config();
 
 const app = express();
 
-// ===================== ROUTES REQUIRE (IMPORTANT ORDER) =====================
+// ===================== ROUTES REQUIRE =====================
 const theoryRoutes = require("./routes/theoryRoutes");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const aiRoutes = require("./routes/aiRoutes");
 const pathRoutes = require("./routes/pathRoutes");
 const subTopicRoutes = require("./routes/subTopicRoutes");
+const quizRoutes = require("./routes/quizRoutes"); // ✅ ADD THIS
 
 // ===================== SEED IMPORT =====================
 const seedDatabase = require("./seedData");
@@ -29,7 +30,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/paths", pathRoutes);
 app.use("/api/subtopics", subTopicRoutes);
-app.use("/api/theory", theoryRoutes);   // ✅ Correct Position
+app.use("/api/theory", theoryRoutes);
+app.use("/api/quizzes", quizRoutes); // ✅ ADD THIS
 
 // ===================== HEALTH CHECK =====================
 app.get("/health", (req, res) => {
